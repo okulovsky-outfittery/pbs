@@ -35,6 +35,7 @@ import ConfigParser
 import os.path
 from os.path import expanduser
 from helpers import *
+from helpers import download_results_helper
 
 
 class Config(object):
@@ -212,3 +213,12 @@ def update_task_redundancy(config, task_id, redundancy):
     else:
         res = _update_tasks_redundancy(config, task_id, redundancy)
         click.echo(res)
+
+import helpers as h
+
+@cli.command(name='download')
+@click.option('--output-file', help='File where the result should be stored',default='output.json', type=click.File('w'))
+@pass_config
+def download_data(config, output_file):
+    download_results_helper(config, output_file)
+    

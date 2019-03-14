@@ -481,3 +481,29 @@ class PbsHandler(PatternMatchingEventHandler):
         res = _update_project(self.config, self.task_presenter, self.results,
                               self.long_description, self.tutorial)
         logging.info(res)
+
+
+
+
+def download_results_helper(config, output_file):
+    
+    pbclient = config.pbclient
+    runs_data = []
+    for i in range(10000):
+        tasks = pbclient.get_taskruns(config.project, 100, i * 100)
+        if len(tasks) == 0:
+            break
+        for t in tasks:
+            runs_data.append(t.data)
+
+    task_data = []
+    for i in range(10000):
+        tasks = pbclient.get_tasks(config.project, 100, i * 100)
+        if len(tasks) == 0:
+            break
+        for t in tasks:
+            task_data.append(t.data)
+
+    result = json.dumps({'tasks': task_data, 'runs': runs_data}, indent=1, ensure_ascii=True)
+    with output_file.open() as file:
+        file.write(result)
