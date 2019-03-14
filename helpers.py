@@ -278,7 +278,7 @@ def _add_helpingmaterials(config, helping_file, helping_type):
 
 
 
-def _delete_tasks(config, task_id, limit=100, offset=0):
+def _delete_tasks(config, task_id, limit=10000000, offset=0):
     """Delete tasks from a project."""
     try:
         project = find_project_by_short_name(config.project['short_name'],
