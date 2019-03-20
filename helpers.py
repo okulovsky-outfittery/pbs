@@ -277,8 +277,7 @@ def _add_helpingmaterials(config, helping_file, helping_type):
         raise
 
 
-
-def _delete_tasks(config, task_id, limit=10000000, offset=0):
+def _delete_tasks(config, task_id, limit=100, offset=0):
     """Delete tasks from a project."""
     try:
         project = find_project_by_short_name(config.project['short_name'],
@@ -291,13 +290,20 @@ def _delete_tasks(config, task_id, limit=10000000, offset=0):
         else:
             limit = limit
             offset = offset
-            tasks = config.pbclient.get_tasks(project.id, limit, offset)
-            while len(tasks) > 0:
-                for t in tasks:
-                    response = config.pbclient.delete_task(t.id)
-                    check_api_error(response)
-                offset += limit
+
+            allTasks = []
+            while True:
                 tasks = config.pbclient.get_tasks(project.id, limit, offset)
+                if len(tasks) == 0:
+                    break
+                offset+=len(tasks)
+                allTasks+=tasks
+            print('{0} of tasks to delete'.format(len(allTasks)))
+            with click.progressbar(allTasks, label="Deleting Tasks") as pgbar:
+                for task in pgbar:
+                    response = config.pbclient.delete_task(task.id)
+                    check_api_error(response)
+
             return "All tasks and task_runs have been deleted"
     except exceptions.ConnectionError:
         return ("Connection Error! The server %s is not responding" % config.server)
@@ -363,7 +369,7 @@ def find_project_by_short_name(short_name, pbclient, all=None):
 
 
 def check_api_error(api_response):
-    print(api_response)
+    #print(api_response)
     """Check if returned API response contains an error."""
     if type(api_response) == dict and 'code' in api_response and api_response['code'] <> 200:
             print("Server response code: %s" % api_response['code'])
@@ -486,7 +492,6 @@ class PbsHandler(PatternMatchingEventHandler):
 
 
 def download_results_helper(config, output_file):
-    
     pbclient = config.pbclient
     runs_data = []
     for i in range(10000):
