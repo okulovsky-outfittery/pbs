@@ -43,6 +43,7 @@ class Config(object):
     """Config class for the command line."""
 
     def __init__(self):
+        print('THIS IS NEW PBS')
         """Init the configuration default values."""
         self.verbose = False
         self.server = None
@@ -221,4 +222,42 @@ import helpers as h
 @pass_config
 def download_data(config, output_file):
     download_results_helper(config, output_file)
-    
+
+
+
+
+def pretty_print_POST(req):
+    """
+    At this point it is completely built and ready
+    to be fired; it is "prepared".
+
+    However pay attention at the formatting used in
+    this function because it is programmed to be pretty
+    printed and may differ from the actual request.
+    """
+    print('{}\n{}\n{}\n\n{}'.format(
+        '-----------START-----------',
+        req.method + ' ' + req.url,
+        '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+        req.body,
+    ))
+
+
+
+import requests
+import re
+import time
+@cli.command(name='register_account')
+@click.option('--username', help='Username to register')
+@click.option('--name', help='Name to register')
+@click.option('--email', help='Email to register')
+@click.option('--password', help='Password to register')
+@pass_config
+def register(config,username,name,email,password):
+    response = requests.get(config.server+'account/register')
+    html = response.text.replace('\n','')
+    pattern = u'id=\"csrf_token\"[^>]*value=\"([^\"]+)\"'
+    token = re.search(pattern,html).group(1)
+    data = dict(fullname=name, name=username, email_addr=email, password=password, confirm=password,csrf_token=token)
+    response = requests.post(config.server+'account/register',data=data, cookies=response.cookies)
+    print(response)
